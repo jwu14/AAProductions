@@ -1,0 +1,42 @@
+package com.example.egyptianratscrew;
+
+import android.app.Activity;
+import android.media.AudioManager;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.TextView;
+
+public class RulesActivity extends Activity {
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setVolumeControlStream(AudioManager.STREAM_MUSIC);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		setContentView(R.layout.activity_rules);
+		
+		TextView info = (TextView) findViewById(R.id.info);
+		info.setText("- Objective: All other players run out of cards.\n" +
+				"- Tap the scarab deck to play a card.\n" +
+				"- Tap the center pile of cards to slap.\n" +
+				"- Players play in turn unless a slap occurs or a face card is played:\n" +
+				"\tWhen an ace is played: the next player needs to play up to 4 cards; King: 3, Queen:2, Jack:1\n" +
+				"\t\tIf another face card is played, the same conditions apply to the next player.\n" +
+				"\t\tIf no face card is played, the previous player who played the last face card takes the card pile.\n" +
+				"- Slap combinations of cards specified in the settings page when they appear in the pile.\n" +
+				"\tA successful slap earns that player the current pile and burned pile of cards in the same order as they were played. \n" +
+				"- Burning cards: A failed slap where no combination is present or playing out of turn will cost a penalty of 1 card.\n" +
+				"- If there are multiple computers, when you run out of cards, you may still slap in and gain cards.");
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.activity_rules, menu);
+		return true;
+	}
+}

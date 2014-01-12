@@ -1,0 +1,3 @@
+INDEX VERSION 1.126+C:\Users\Jesse Wu\awesomeapplesauce\.metadata\.plugins\org.eclipse.jdt.core
+3525257670.index
+2137713203.index

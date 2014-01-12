@@ -1,0 +1,679 @@
+package com.example.egyptianratscrew;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Random;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.os.Handler;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.TextView;
+
+public class GameView extends View{
+    HashMap <Card, Bitmap> cardGraphics;
+    Context mContext;
+    Paint mBGPaint;
+    boolean drawSlap, drawBurn, computerSlap;
+    int windowWidth, windowHeight, rotation = 0;
+
+	TextView myDeckCounter;
+	TextView cpuDeckCounter1;
+
+    ArrayList<Card> drawnCards = new ArrayList<Card>();
+    ArrayList<Card> table = new ArrayList<Card>();
+    ArrayList<Card> burned = new ArrayList<Card>();
+    Deck playerDeck, computerDeck1, computerDeck2, computerDeck3;
+    Computer computer;
+    int[] settings = new int[10];
+    /* settings[0] = # of players
+     * settings[1] = difficulty
+     * settings[2] = Doubles
+     * settings[3] = Sandwiches
+     * settings[4] = Tens (x,10-x)
+     * settings[5] = Tens sandwiches
+     * settings[6] = Marriage (K,Q or Q,K)
+     * settings[7] = Divorce (K,x,Q or Q,x,K)
+     * settings[8] = Slap 7s
+     * settings[9] = Top-Bottom
+     */
+    
+    int turn = 0; //0 = player's turn
+    int players; //# of players including user
+    int owed_card_counter = 1; //number of cards owed for each respective face card - queen: 2 king: 3 ace: 4 else: 1
+    int face_card_counter = -1; //counts down to 0; whoever played the face card takes the pile
+    int temp_counter;
+    int gameOver = -1;
+    int stopFlag, loopFlag;
+    String slap_message;
+    Handler handlerTimer = new Handler();
+    Runnable cpuRunnable, reaction;
+    Random rand = new Random();
+    int slaps_won = 0, total_slaps = 0, cards_burned = 0;
+    long time_elapsed = 0;
+    int burn_penalty = 0;
+    int slap_no_burn_flag = 0;
+    int take_pile_flag = 0;
+    
+    public GameView(Context context){
+        super(context);
+        mContext = context;
+        init();
+    }
+    public GameView(Context context, AttributeSet attrs){
+        super(context, attrs);
+        mContext = context;
+        init();
+    }
+    public GameView(Context context, AttributeSet attrs, int defStyle){
+        super(context, attrs, defStyle);
+        mContext = context;
+        init();
+    }
+    
+    @SuppressWarnings("deprecation")
+    public void init(){
+        setFocusable(true);
+        setFocusableInTouchMode(true);
+        
+        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        windowWidth = wm.getDefaultDisplay().getWidth();
+        windowHeight = wm.getDefaultDisplay().getHeight();
+
+        mBGPaint = new Paint();
+        mBGPaint.setARGB(125, 125, 100, 0);
+        
+        cardGraphics = new HashMap<Card, Bitmap>();
+        ArrayList<Card> deckArr = new ArrayList<Card>();
+        setup(deckArr);
+        
+        drawSlap = false;
+        computerSlap = false;
+        drawBurn = false;
+        
+        //DELETE THIS LATER
+        settings[0] = 4;
+        settings[1] = 2;
+    }
+    
+    public void drawCard(Card c){
+        drawnCards.add(c);
+        invalidate();
+    }
+
+    @SuppressLint("DrawAllocation")
+	@Override
+	public void onDraw(Canvas canvas){
+		canvas.drawRect(0, 0, windowWidth, windowHeight, mBGPaint);
+		
+		Paint p = new Paint();
+		// Draw computer image
+		Bitmap cp = BitmapFactory.decodeResource(getResources(), R.drawable.computer);
+        cp = Bitmap.createScaledBitmap(cp, windowWidth/4, windowHeight/4, false);
+        canvas.drawBitmap(cp, windowWidth/2 - cp.getWidth()/2, 0, p);
+		
+        // Draw deck image
+		Bitmap deckimg=BitmapFactory.decodeResource(getResources(), R.drawable.card_back);
+        deckimg=Bitmap.createScaledBitmap(deckimg, windowWidth/6, windowHeight/6, false);
+        canvas.drawBitmap(deckimg,  windowWidth/2 - deckimg.getWidth()/2, windowHeight - deckimg.getHeight() - windowHeight/5, p);
+		
+        // Draw cards if it should
+		Matrix matrix = new Matrix();
+		Bitmap c;
+		rotation = 0;
+		for(int i = 0; i < drawnCards.size(); i++){
+			matrix.postRotate(rotation); // clockwise by 30 degrees
+			rotation+=38;
+			c = cardGraphics.get(drawnCards.get(i));
+			c = Bitmap.createBitmap(c, 0, 0, c.getWidth(), c.getHeight(), matrix, true);
+			canvas.drawBitmap(c, windowWidth/2 - c.getWidth()/2, windowHeight/4, p);
+		}
+		
+		for(int i = burned.size(); i > 0; i--){
+			if(i > 3) i = 3;
+			c = cardGraphics.get(burned.get(burned.size() - i));
+			c=Bitmap.createScaledBitmap(c, windowWidth/20, windowHeight/20, false);
+			canvas.drawBitmap(c, windowWidth/10, windowHeight/2 - c.getHeight() * i, p);
+		}
+		
+		// Draw slap if it should
+		if(drawSlap){
+			Bitmap slapimg=BitmapFactory.decodeResource(getResources(), R.drawable.hand);
+			slapimg=Bitmap.createScaledBitmap(slapimg, slapimg.getWidth()/2, slapimg.getHeight()/2, false);
+			canvas.drawBitmap(slapimg, 50, 50, p);
+			drawSlap = false;
+			invalidate();
+		}
+		if (computerSlap){
+			Bitmap slapimg=BitmapFactory.decodeResource(getResources(), R.drawable.slap);
+			slapimg=Bitmap.createScaledBitmap(slapimg,  windowWidth/4, (int)(((windowWidth/4.0)/slapimg.getWidth()*slapimg.getHeight())), false);
+			canvas.drawBitmap(slapimg, windowWidth/2 - cp.getWidth()/2, cp.getHeight()/2, p);
+			computerSlap = false;
+			invalidate();
+		}
+		if (drawBurn){
+			Bitmap burnimg=BitmapFactory.decodeResource(getResources(), R.drawable.burn);
+			burnimg=Bitmap.createScaledBitmap(burnimg,  windowWidth/4, (int)(((windowWidth/4.0)/burnimg.getWidth()*burnimg.getHeight())), false);
+			canvas.drawBitmap(burnimg, windowWidth/2 - burnimg.getWidth(), windowHeight - deckimg.getHeight() - windowHeight/5-burnimg.getHeight(), p);
+			drawBurn = false;
+			invalidate();
+		}
+		if(gameOver == 1){
+			Bitmap win=BitmapFactory.decodeResource(getResources(), R.drawable.win);
+			win=Bitmap.createScaledBitmap(win,  windowWidth/2, (int)(((windowWidth/2.0)/win.getWidth()*win.getHeight())), false);
+			canvas.drawBitmap(win, windowWidth/2 - win.getWidth()/2, windowHeight/2 - win.getHeight()/2, p);
+		}
+		else if(gameOver == 0){
+			Bitmap lose=BitmapFactory.decodeResource(getResources(), R.drawable.lose);
+			lose=Bitmap.createScaledBitmap(lose,  windowWidth/2, (int)(((windowWidth/2.0)/lose.getWidth()*lose.getHeight())), false);
+			canvas.drawBitmap(lose, windowWidth/2 - lose.getWidth()/2, windowHeight/2 - lose.getHeight()/2, p);
+		}
+		
+		updateCounter();
+	}
+    
+    public void setupCounter(TextView mDC, TextView cpuDC){
+    	myDeckCounter = mDC;
+    	cpuDeckCounter1 = cpuDC;
+    }
+    
+    public void updateCounter(){
+    	myDeckCounter.setText(Integer.toString(playerDeck.getSize()));
+    	myDeckCounter.invalidate();
+    	cpuDeckCounter1.setText(Integer.toString(computerDeck1.getSize()));
+    	cpuDeckCounter1.invalidate();
+    }
+    
+    @SuppressWarnings("unused")
+	private void setup(ArrayList<Card> cards){
+        Bitmap b = BitmapFactory.decodeResource(getResources(), R.drawable.card_back);
+         
+        //Setting up all the cards
+        for (int i = 0; i <= 3; i++){
+            for (int j = 1; j <= 13; j++){
+                String suit = null;
+                switch (i){
+                    case 0:
+                        suit = "clubs";
+                        break;
+                    case 1:
+                        suit = "diamonds";
+                        break;
+                    case 2:
+                        suit = "hearts";
+                        break;
+                    case 3:
+                        suit = "spades";
+                        break;
+                }
+            
+                String value;
+                if (j==1)
+                    value = "a";
+                else
+                    value = "" + j;
+                Card c = new Card(i,j);
+                cards.add(c);
+                
+                if (i == 0 && j == 1) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_a);        
+                else if (i == 0 && j == 2) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_2);
+                else if (i == 0 && j == 3) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_3);
+                else if (i == 0 && j == 4) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_4);
+                else if (i == 0 && j == 5) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_5);
+                else if (i == 0 && j == 6) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_6);
+                else if (i == 0 && j == 7) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_7);
+                else if (i == 0 && j == 8) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_8);
+                else if (i == 0 && j == 9) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_9);
+                else if (i == 0 && j == 10) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_10);
+                else if (i == 0 && j == 11) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_11);
+                else if (i == 0 && j == 12) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_12);
+                else if (i == 0 && j == 13) b=BitmapFactory.decodeResource(getResources(), R.drawable.clubs_13);
+                else if (i == 1 && j == 1) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_a);
+                else if (i == 1 && j == 2) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_2);
+                else if (i == 1 && j == 3) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_3);
+                else if (i == 1 && j == 4) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_4);
+                else if (i == 1 && j == 5) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_5);
+                else if (i == 1 && j == 6) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_6);
+                else if (i == 1 && j == 7) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_7);
+                else if (i == 1 && j == 8) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_8);
+                else if (i == 1 && j == 9) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_9);
+                else if (i == 1 && j == 10) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_10);
+                else if (i == 1 && j == 11) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_11);
+                else if (i == 1 && j == 12) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_12);
+                else if (i == 1 && j == 13) b=BitmapFactory.decodeResource(getResources(), R.drawable.diamonds_13);
+                else if (i == 2 && j == 1) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_a);
+                else if (i == 2 && j == 2) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_2);
+                else if (i == 2 && j == 3) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_3);
+                else if (i == 2 && j == 4) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_4);
+                else if (i == 2 && j == 5) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_5);
+                else if (i == 2 && j == 6) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_6);
+                else if (i == 2 && j == 7) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_7);
+                else if (i == 2 && j == 8) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_8);
+                else if (i == 2 && j == 9) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_9);
+                else if (i == 2 && j == 10) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_10);
+                else if (i == 2 && j == 11) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_11);
+                else if (i == 2 && j == 12) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_12);
+                else if (i == 2 && j == 13) b=BitmapFactory.decodeResource(getResources(), R.drawable.hearts_13);
+                else if (i == 3 && j == 1) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_a);
+                else if (i == 3 && j == 2) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_2);
+                else if (i == 3 && j == 3) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_3);
+                else if (i == 3 && j == 4) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_4);
+                else if (i == 3 && j == 5) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_5);
+                else if (i == 3 && j == 6) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_6);
+                else if (i == 3 && j == 7) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_7);
+                else if (i == 3 && j == 8) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_8);
+                else if (i == 3 && j == 9) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_9);
+                else if (i == 3 && j == 10) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_10);
+                else if (i == 3 && j == 11) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_11);
+                else if (i == 3 && j == 12) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_12);
+                else if (i == 3 && j == 13) b=BitmapFactory.decodeResource(getResources(), R.drawable.spades_13);
+                
+                b=Bitmap.createScaledBitmap(b, windowWidth/4, windowHeight/4, false);
+                //b=Bitmap.createScaledBitmap(b, 180, 150, false);
+				cardGraphics.put(c, b);
+            }
+        }
+        
+        Collections.shuffle(cards);
+        
+        ArrayList<Card> p1 = new ArrayList<Card>();
+        ArrayList<Card> p2 = new ArrayList<Card>();
+        ArrayList<Card> p3 = new ArrayList<Card>();
+        ArrayList<Card> p4 = new ArrayList<Card>();
+        
+        players = settings[0];
+        switch (players){
+            case 2:
+                for (int i = 0; i < 52;){
+                    p1.add(cards.get(i++));
+                    p2.add(cards.get(i++));
+                }
+                
+                break;
+                
+            case 3:
+                for (int i = 0; i < 51;){
+                    p1.add(cards.get(i++));
+                    p2.add(cards.get(i++));
+                    p3.add(cards.get(i++));
+                }
+                p1.add(cards.get(51)); //extra card goes to player 18-17-17
+                
+                break;
+                
+            case 4:
+                for (int i = 0; i < 52;){
+                    p1.add(cards.get(i++));
+                    p2.add(cards.get(i++));
+                    p3.add(cards.get(i++));
+                    p4.add(cards.get(i++));
+                }
+                
+                break;        
+        }
+        
+        Collections.reverse(p1);
+        Collections.reverse(p2);
+        Collections.reverse(p3);
+        Collections.reverse(p4);
+        
+        playerDeck = new Deck(p1);
+        computerDeck1 = new Deck(p2);
+        computerDeck2 = new Deck(p3);
+        computerDeck3 = new Deck(p4);
+
+        int difficulty = settings[1];
+        computer = new Computer(difficulty);
+    }
+    
+    //slap trigger
+    public void slap()
+    {
+    	if (burn_penalty < 0){
+	    	if (checkSlap(playerDeck)){
+	    		slaps_won++;
+		    	drawSlap = true;
+		    	invalidate();
+	    	}
+	    	else if (slap_no_burn_flag != 1){
+	    		Log.v("egyptianRS", "turn0: BURN SLAP");
+	    		drawBurn = true;
+	    		invalidate();
+	    		if (playerDeck.getSize() == 0)
+	    			burn_penalty = 5;
+	    	}
+    	}
+    }
+    
+    //draw trigger
+    public void playerTurn(){
+        if (turn == 0 && owed_card_counter > 0 && take_pile_flag != 1){
+        	stopFlag = 0;
+        	
+        	if (time_elapsed == 0){
+        		time_elapsed = System.currentTimeMillis();
+        	}
+        	
+            final Card card = playerDeck.draw();
+            
+            if (card == null){
+            	if ((computerDeck1.getSize() == 0 && computerDeck2.getSize() == 0) ||
+            		(computerDeck2.getSize() == 0 && computerDeck3.getSize() == 0) ||
+            		(computerDeck3.getSize() == 0 && computerDeck1.getSize() == 0)){
+	                Log.v("egyptianRS", "LOSE");
+	                gameOver = 0;
+	                invalidate();
+	                time_elapsed = (System.currentTimeMillis() - time_elapsed) / 1000;
+	                turn = -1;
+	                return;
+            	}
+            	else{
+            		turn = 1;
+            		computerTurn();
+            		return;
+            	}
+            }
+            else{
+	            Log.v("egyptianRS", "turn0:" + card.getValue() + " face:" + face_card_counter + " owed:" + owed_card_counter);
+
+	            face_card_counter--;
+	            owed_card_counter--;
+	            
+	            if ((temp_counter = card.numCardsOwed()) > 1 || card.getValue() == 11){
+	            	face_card_counter = temp_counter;
+	            	owed_card_counter = 0;
+	            }
+	            
+	            if (face_card_counter == 0)
+	            	take_pile_flag = 1;
+	            
+	            table.add(card);
+	            drawCard(card);
+	            
+	            handlerTimer.removeCallbacks(reaction);
+	            handlerTimer.postDelayed (reaction = new Runnable(){public void run(){
+    				if (computerSlap()){}
+    				else if (stopFlag != 1){
+						if (take_pile_flag == 1){
+							Log.v("egyptianRS", "turn:" + ((turn + players - 1) % players) + " TAKE PILE");
+							takePile(getPreviousDeck());
+							take_pile_flag = 0;
+						}
+						else if (owed_card_counter == 0){
+				            turn = 1;
+				            Log.v("egyptianRS", "player: turn is now 1");
+				            
+				            owed_card_counter = temp_counter;
+				            
+			        		computerTurn();
+			            }
+    				}
+        		}}, computer.getDelay());
+            }
+	    }
+        else{
+            Log.v("egyptianRS", "turn0: BURN TURN");
+            drawBurn = true;
+            invalidate();
+            
+        	Card card = playerDeck.draw();
+        	
+        	if (card != null){
+        		burned.add(card);
+        		cards_burned++;
+        	}
+        }
+    }
+    
+    private boolean computerSlap(){
+    	Deck deck;
+    	
+    	if (checkRules()){
+    		slap_no_burn_flag = 1;
+    		deck = randomCompDeck();
+    		checkSlap(deck);
+    		computerSlap = true;
+            invalidate();
+            
+            handlerTimer.postDelayed (new Runnable(){public void run(){
+            	slap_no_burn_flag = 0;
+            }}, 500);
+            
+            return true;
+	    }
+    	
+    	return false;
+    }
+    
+    private Deck randomCompDeck(){
+    	int randomDeck;
+    	
+    	if (players == 2) return computerDeck1;
+    	else if (players == 3){
+    		randomDeck = rand.nextInt(2);
+    		
+    		if (randomDeck == 0) return computerDeck1;
+    		else return computerDeck2; //(randomDeck == 1)
+    	}
+    	else{//(players == 4)
+    		randomDeck = rand.nextInt(3);
+    		
+    		if (randomDeck == 0) return computerDeck1;
+    		else if (randomDeck == 1) return computerDeck2;
+    		else return computerDeck3; //(randomDeck == 2)
+    	}
+    }
+    
+    private void computerTurn(){
+        if (turn != 0){
+        	handlerTimer.removeCallbacks(cpuRunnable);
+        	handlerTimer.postDelayed (cpuRunnable = new Runnable(){public void run(){
+    			stopFlag = 0;
+    			loopFlag = 0;
+    			
+                final Card card = getComputerDeck().draw();
+                burn_penalty--;
+                
+                if (card == null){
+                	if (computerDeck1.getSize() == 0 && computerDeck2.getSize() == 0 && computerDeck3.getSize() == 0){
+	                    Log.v("egyptianRS", "WIN");
+	                    gameOver = 1;
+	                    invalidate();
+                	}
+                	else{
+                		turn = (turn + 1) % players;
+                		if (turn != 0){
+                			computerTurn();
+                			return;
+                		}
+                	}
+                }
+                else{
+                    Log.v("egyptianRS", "turn:" + turn + " " + card.getValue() + " face:" + face_card_counter + " owed:" + owed_card_counter);
+
+                    face_card_counter--;
+                    owed_card_counter--;
+                    
+                    if ((temp_counter = card.numCardsOwed()) > 1 || card.getValue() == 11){
+                    	loopFlag = 1;
+    	            	face_card_counter = temp_counter;
+    	            	owed_card_counter = temp_counter;
+    	            	turn = (turn + 1) % players;
+    	            	Log.v("egyptianRS", "turn++ in first block");
+    	            }
+                    else if (owed_card_counter == 0){
+                    	loopFlag = 1;
+                    	owed_card_counter = temp_counter;
+                    	turn = (turn + 1) % players;
+                    	Log.v("egyptianRS", "turn++ in second block");
+                    }
+                    
+                    if (face_card_counter == 0)
+                    	take_pile_flag = 1;
+                    
+                    table.add(card);
+    	            drawCard(card);
+                                     
+                    handlerTimer.removeCallbacks(reaction);
+                    handlerTimer.postDelayed (reaction = new Runnable(){public void run(){
+        				if(computerSlap())
+        	            	stopFlag = 1;
+        				else if (stopFlag != 1){
+	                    	if (take_pile_flag != 1){
+		    					Log.v("egyptianRS", "turn:" + ((turn + players - 1) % players) + " TAKE PILE");
+		    					turn--;
+		    					takePile(getPreviousDeck());
+		    					turn++;
+		    					take_pile_flag = 0;
+		    				}
+	                    	else if(owed_card_counter > 0 && loopFlag != 1){
+	        					handlerTimer.postDelayed(cpuRunnable, 0); //run computerTurn again
+	        				}
+	                    	
+	                    	if (turn != 0)
+	                    		computerTurn();
+	                    	else if (turn == 0 && playerDeck.getSize() == 0)
+	                    		playerTurn();
+	                    }
+				    }}, computer.getDelay());
+                }
+    		}}, 0);
+        }
+    }
+    
+    private Deck getComputerDeck()
+    {
+    	Deck computerDeck;
+    	
+    	if (turn == 1) computerDeck = computerDeck1;
+    	else if (turn == 2) computerDeck = computerDeck2;
+    	else computerDeck = computerDeck3; //(turn == 3)
+    	
+    	return computerDeck;
+    }
+    
+    private Deck getPreviousDeck()
+    {
+    	Deck previousDeck;
+    	
+    	if (turn == 0)
+    		if (players == 2) previousDeck = computerDeck1;
+    		else if (players == 3) previousDeck = computerDeck2;
+    		else previousDeck = computerDeck3; //(players == 4)
+    	else if (turn == 1) previousDeck = playerDeck;
+    	else if (turn == 2) previousDeck = computerDeck1;
+    	else previousDeck = computerDeck2; //(turn == 3)
+    	
+    	return previousDeck;
+    }
+    
+    private boolean checkSlap(Deck d){
+        if (checkRules()){
+        	total_slaps++;
+        	if (d == playerDeck) Log.v("egyptianRS", "SLAP PLAYER");
+        	else if (d == computerDeck1) Log.v("egyptianRS", "SLAP COMPUTER1");
+        	else if (d == computerDeck2) Log.v("egyptianRS", "SLAP COMPUTER2");
+        	else if (d == computerDeck3) Log.v("egyptianRS", "SLAP COMPUTER3");
+
+        	stopFlag = 1;
+            takePile(d);
+            return true;
+        }
+        else {
+        	if (slap_no_burn_flag != 1){
+	        	Card card = d.draw();
+	        	
+	        	if (card != null){
+	        		cards_burned++;
+	        		burned.add(card);
+	        	}
+        	}
+        	
+            return false;
+        }
+    }
+    
+    private void takePile(Deck d){
+        d.add(table);
+        d.add(burned);
+        table.clear();
+        burned.clear();
+        drawnCards.clear();
+        invalidate();
+        
+        //reset
+        face_card_counter = -1;
+        owed_card_counter = 1;
+        
+        if (d == playerDeck) turn = 0;
+        else if (d == computerDeck1){
+            turn = 1;
+            computerTurn();
+        }
+        else if (d == computerDeck2){
+        	turn = 2;
+        	computerTurn();
+        }
+        else if (d == computerDeck3){
+        	turn = 3;
+        	computerTurn();
+        }
+    }
+    
+    private boolean checkRules(){
+        slap_message = null;
+        
+        if (//(settings[2] == 1) &&
+                (table.size()-2 >= 0) && //pile is sufficiently large
+                (table.get(table.size()-1).getValue() == table.get(table.size()-2).getValue()))
+            slap_message = "Double!";
+        
+        if (//(settings[3] == 1) &&
+                (table.size()-3 >= 0) && //pile is sufficiently large
+                (table.get(table.size()-1).getValue() == table.get(table.size()-3).getValue()))
+            slap_message = "Sandwich!";
+        
+        /*if (//(settings[4] == 1) &&
+                (table.size()-2 >= 0) && //pile is sufficiently large
+                (table.get(table.size()-1).getValue() + table.get(table.size()-2).getValue()) == 10)
+            slap_message = "Tens!";
+        
+        if (//(settings[5] == 1) &&
+                (table.size()-3 >= 0) && //pile is sufficiently large
+                (table.get(table.size()-1).getValue() + table.get(table.size()-3).getValue()) == 10)
+            slap_message = "Tens Sandwich!";
+        
+        if (//(settings[6] == 1) &&
+                (table.size()-2 >= 0) && //pile is sufficiently large
+                ((table.get(table.size()-1).getValue() == 12 && table.get(table.size()-2).getValue() == 13) ||
+                (table.get(table.size()-1).getValue() == 13 && table.get(table.size()-2).getValue() == 12)))
+            slap_message = "Marriage!";
+        
+        if (//(settings[7] == 1) &&
+                (table.size()-3 >= 0) && //pile is sufficiently large
+                ((table.get(table.size()-1).getValue() == 12 && table.get(table.size()-3).getValue() == 13) ||
+                (table.get(table.size()-1).getValue() == 13 && table.get(table.size()-3).getValue() == 12)))
+            slap_message = "Divorce!";
+        
+        if (//(settings[8] == 1) &&
+                (table.get(table.size()-1).getValue() == 7))
+            slap_message = "7's!";
+        
+        if (//(settings[9] == 1) &&
+                (table.size()-2 >= 0) && //pile is sufficiently large
+                (table.get(0).getValue() == table.get(table.size()-1).getValue()))
+            slap_message = "Top-Bottom!";*/
+        
+        if (slap_message == null) return false;
+        else return true;
+    }
+}

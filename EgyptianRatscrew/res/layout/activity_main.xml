@@ -1,0 +1,118 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg"
+    tools:context=".MainActivity" >
+    
+    <com.example.egyptianratscrew.GameView
+      android:id="@+id/egyptianratscrew"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent" />
+    
+    <FrameLayout
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:onClick="slapListener" />
+    
+	<TextView
+	    android:id="@+id/myDeckCounter"
+	    android:layout_width="80dp"
+	    android:layout_height="120dp"
+	    android:layout_gravity="center|bottom"
+	    android:layout_marginBottom="75dp"
+	    android:clickable="true"
+	    android:gravity="bottom|center_horizontal"
+	    android:onClick="drawListener"
+	    android:textColor="#FFFFFF" />
+	
+	<TextView
+	    android:id="@+id/cpuDeckCounter1"
+	    android:layout_width="40dp"
+	    android:layout_height="30dp"
+	    android:layout_gravity="center|top"
+	    android:layout_marginTop="150dp"
+	    android:clickable="false"
+	    android:gravity="bottom|center_horizontal"
+	    android:textColor="#FFFFFF" />
+	
+	<TextView
+	    android:id="@+id/cpuDeckCounter2"
+	    android:layout_width="40dp"
+	    android:layout_height="30dp"
+	    android:layout_gravity="center|top"
+	    android:layout_marginTop="150dp"
+	    android:clickable="false"
+	    android:layout_marginLeft="90dp"
+	    android:gravity="bottom|center_horizontal"
+	    android:textColor="#FFFFFF" />
+	
+	<TextView
+	    android:id="@+id/cpuDeckCounter3"
+	    android:layout_width="40dp"
+	    android:layout_height="30dp"
+	    android:layout_gravity="center|top"
+	    android:layout_marginTop="150dp"
+	    android:layout_marginRight="90dp"
+	    android:clickable="false"
+	    android:gravity="bottom|center_horizontal"
+	    android:textColor="#FFFFFF" />
+	
+	<TextView
+	    android:id="@+id/cpuDeckCounter4"
+	    android:layout_width="40dp"
+	    android:layout_height="30dp"
+	    android:layout_gravity="center|top"
+	    android:layout_marginTop="150dp"
+	    android:clickable="false"
+	    android:layout_marginRight="43dp"
+	    android:gravity="bottom|center_horizontal"
+	    android:textColor="#FFFFFF" />
+	
+	<TextView
+	    android:id="@+id/cpuDeckCounter5"
+	    android:layout_width="40dp"
+	    android:layout_height="30dp"
+	    android:layout_gravity="center|top"
+	    android:layout_marginTop="150dp"
+	    android:layout_marginLeft="43dp"
+	    android:clickable="false"
+	    android:gravity="bottom|center_horizontal"
+	    android:textColor="#FFFFFF" />
+	
+	<TextView
+	    android:id="@+id/burnCounter"
+	    android:layout_width="40dp"
+	    android:layout_height="30dp"
+	    android:layout_gravity="left"
+	    android:layout_marginTop="368dp"
+	    android:layout_marginLeft="24dp"
+	    android:clickable="false"
+	    android:gravity="bottom|center_horizontal"
+	    android:textColor="#FFFFFF" />
+	
+	<TextView
+	    android:id="@+id/slapMsg"
+	    android:layout_width="100dp"
+	    android:layout_height="60dp"
+	    android:layout_gravity="right"
+	    android:layout_marginRight="18dp"
+	    android:layout_marginTop="345dp"
+	    android:clickable="false"
+	    android:gravity="bottom|center_horizontal"
+	    android:textColor="#FFFFFF"
+	    android:textSize="17sp" />
+
+	<ImageView
+	    android:id="@+id/sound"
+	    android:layout_width="44dp"
+	    android:layout_height="44dp"
+	    android:src="@drawable/soundon" 
+	    android:layout_gravity="left|bottom"
+	    android:clickable = "true"
+	    android:onClick = "musicListener"
+	    />
+
+</FrameLayout>

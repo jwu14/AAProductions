@@ -1,0 +1,63 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/bg"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingBottom="10dp"
+    android:paddingTop="10dp"
+    tools:context=".StatsActivity" >
+
+    <ImageView
+        android:id="@+id/gameResult"
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:layout_weight="0.23"
+        android:clickable="false"
+        android:gravity="center_horizontal"
+        android:paddingTop="90sp"
+        android:textColor="#FFFFFF"
+        android:textSize="50sp" />
+    
+     <TextView
+         android:id="@+id/Time"
+         android:layout_width="404dp"
+         android:layout_height="52dp"
+         android:clickable="false"
+         android:gravity="center_horizontal"
+         android:text="Time: "
+         android:textColor="#FFFFFF"
+         android:textSize="20sp" />
+     
+     <TextView
+         android:id="@+id/SlapPerc"
+         android:layout_width="404dp"
+         android:layout_height="52dp"
+         android:clickable="false"
+         android:gravity="center_horizontal"
+         android:text="Slaps Won: "
+         android:textColor="#FFFFFF"
+         android:textSize="20sp" />
+     
+     <TextView
+         android:id="@+id/BurnPerc"
+         android:layout_width="404dp"
+         android:layout_height="52dp"
+         android:clickable="false"
+         android:gravity="center_horizontal"
+         android:text="Cards Burned: "
+         android:textColor="#FFFFFF"
+         android:textSize="20sp" />
+     
+     <Button
+         android:id="@+id/play_again"
+         android:layout_width="174dp"
+         android:layout_height="wrap_content"
+         android:layout_gravity="bottom|center"
+         android:layout_marginBottom="70sp"
+         android:onClick="playAgain"
+         android:text="@string/play_again"
+         android:textColor="#FFFFFF" />
+
+</LinearLayout>

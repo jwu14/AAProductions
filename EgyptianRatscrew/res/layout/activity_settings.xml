@@ -1,0 +1,190 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/bg"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingBottom="10dp"
+    android:paddingTop="10dp"
+    tools:context=".SettingsActivity" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:focusable="true"
+        android:text="@string/numComputers"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.61"
+        android:gravity="center" >
+
+        <RadioGroup
+            android:id="@+id/numComps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/comp1"
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:text="1" />
+
+            <RadioButton
+                android:id="@+id/comp2"
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:text="2" />
+
+            <RadioButton
+                android:id="@+id/comp3"
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:text="3" />
+        </RadioGroup>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:text="@string/difficulty"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.32"
+        android:gravity="center" >
+
+        <RadioGroup
+            android:id="@+id/difficulty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/easy"
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:text="Easy"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp" />
+
+            <RadioButton
+                android:id="@+id/med"
+                android:layout_width="82dp"
+                android:layout_height="wrap_content"
+                android:text="Medium"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp" />
+
+            <RadioButton
+                android:id="@+id/hard"
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:text="Hard"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp" />
+
+            <RadioButton
+                android:id="@+id/impossible"
+                android:layout_width="98dp"
+                android:layout_height="wrap_content"
+                android:text="Impossible"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp" />
+        </RadioGroup>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:text="@string/slapoptions"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp" />
+
+    <CheckBox
+        android:id="@+id/check_doubles"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Doubles (ex. 9,9)"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+    <CheckBox
+        android:id="@+id/check_sandwiches"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sandwiches (ex. 8, Any, 8)"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+    <CheckBox
+        android:id="@+id/check_tens"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tens (2,8 / 3,7 / 4,6 / 5,5)"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+    <CheckBox
+        android:id="@+id/check_tens_sandwiches"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tens Sandwiches (ex. 3,Any,7)"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+    <CheckBox
+        android:id="@+id/check_marriage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Marriage (K,Q or Q,K)"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+    <CheckBox
+        android:id="@+id/check_divorce"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Divorce (K,Any,Q or Q,Any,K)"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+    <CheckBox
+        android:id="@+id/check_slap7s"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Slap 7s (Slap when a 7 is played)"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+    <CheckBox
+        android:id="@+id/check_top_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Top-Bottom (Top card matches bottom card)"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
+
+    <Button
+        android:id="@+id/playButton"
+        android:layout_width="99dp"
+        android:layout_height="wrap_content"
+        android:text="Play"
+        android:onClick = "playListener"
+        android:textColor="#FFFFFF"/>
+
+</LinearLayout>

@@ -1,0 +1,33 @@
+package com.example.egyptianratscrew;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+
+public class MainActivity extends Activity {
+	GameView mGameView;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+        Bundle b = getIntent().getExtras();
+        setContentView(R.layout.activity_main);
+        TextView myDeckCounter = (TextView) findViewById(R.id.myDeckCounter);
+		TextView cpuDeckCounter1 = (TextView) findViewById(R.id.cpuDeckCounter1);
+		
+		mGameView = (GameView) findViewById(R.id.egyptianratscrew);
+		mGameView.setupCounter(myDeckCounter, cpuDeckCounter1);
+		mGameView.setupBundle(b);
+		
+		
+	}
+	
+	public void slapListener(View view){
+		mGameView.slap();
+	}
+
+	public void drawListener(View view){
+		mGameView.playerTurn();
+	}
+}

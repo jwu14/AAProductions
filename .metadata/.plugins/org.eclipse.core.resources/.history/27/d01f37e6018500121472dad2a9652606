@@ -1,0 +1,98 @@
+package com.example.egyptianratscrew;
+
+import android.os.Bundle;
+import android.app.Activity;
+import android.content.Intent;
+import android.util.Log;
+import android.view.Menu;
+import android.view.View;
+import android.widget.CheckBox;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+
+public class SettingsActivity extends Activity {
+
+	RadioGroup numComps;
+	RadioGroup diff;
+	CheckBox doubles;
+	CheckBox sandwiches;
+	CheckBox tens;
+	CheckBox tens_sandwiches;
+	CheckBox marriage;
+	CheckBox divorce;
+	CheckBox slap7s;
+	CheckBox top_bottom;
+	
+	int[] settings = new int[10];
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_settings);
+		
+		numComps = (RadioGroup) findViewById(R.id.numComps);
+	    numComps.check(R.id.comp1);
+	    
+		diff = (RadioGroup) findViewById(R.id.difficulty);
+		diff.check(R.id.med);
+		
+		doubles = (CheckBox) findViewById(R.id.check_doubles);
+		doubles.setChecked(true);
+		
+		sandwiches = (CheckBox) findViewById(R.id.check_sandwiches);
+		sandwiches.setChecked(true); 
+	    
+		tens = (CheckBox) findViewById(R.id.check_tens);
+		tens.setChecked(false); 
+		
+		tens_sandwiches = (CheckBox) findViewById(R.id.check_tens_sandwiches);
+		sandwiches.setChecked(false); 
+		
+		marriage = (CheckBox) findViewById(R.id.check_marriage);
+		marriage.setChecked(false); 
+	    
+		divorce = (CheckBox) findViewById(R.id.check_divorce);
+		divorce.setChecked(false); 
+		
+		slap7s = (CheckBox) findViewById(R.id.check_slap7s);
+		slap7s.setChecked(false); 
+		
+		top_bottom = (CheckBox) findViewById(R.id.check_top_bottom);
+		top_bottom.setChecked(false); 
+		
+	    Log.v("egyptianRS","radio button: " + numComps.getCheckedRadioButtonId());
+	  }
+
+	public void numCompsChanged(){
+		
+	}
+	
+	public void playListener(View view){
+		Intent intent = new Intent(this, MainActivity.class);
+		Bundle b = new Bundle();
+		int selected;
+		RadioButton r;
+
+		/*int selected = numComps.getCheckedRadioButtonId();
+		RadioButton r = (RadioButton) findViewById(selected);
+	    b.putInt("numComps", Integer.parseInt((String)r.getText()));
+	    Log.v("egyptianRS", "numComps : " + r.getText());
+	    
+	    selected = diff.getCheckedRadioButtonId();
+	    r = (RadioButton) findViewById(selected);
+	    Log.v("egyptianRS", "difficulty : " + r.getText());*/
+	    
+		selected = numComps.getCheckedRadioButtonId();
+	    r = (RadioButton) findViewById(selected);
+	    settings[0] = Integer.parseInt((String) r.getText());
+	    
+	    selected = diff.getCheckedRadioButtonId();
+	    r = (RadioButton) findViewById(selected);
+	    if (((String) r.getText()).equals("Easy")) settings[1] = 1;
+	    
+	    b.putIntArray("settings", settings);
+	    
+	    intent.putExtras(b);
+	    startActivity(intent);
+	}
+}
